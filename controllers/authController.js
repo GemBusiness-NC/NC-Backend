@@ -3,9 +3,9 @@ import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import transporter from "../config/nodemailer.js";
 
-// Register a new user
+// Register a new user (admin or regular)
 export const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, isAdmin } = req.body;
 
   // Check if all required fields are provided
   if (!name || !email || !password) {
@@ -14,7 +14,7 @@ export const register = async (req, res) => {
       .json({ success: false, message: "All fields are required" });
   }
 
-  // Validate email format using regex (optional)
+  // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res
@@ -34,69 +34,42 @@ export const register = async (req, res) => {
     // Hash the password before saving it to the database
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Set isAdmin flag based on the request or default to false
+    const isAdminFlag = isAdmin !== undefined ? isAdmin : false;
+
     // Create a new user and save to the database
-    const user = new userModel({ name, email, password: hashedPassword });
+    const user = new userModel({
+      name,
+      email,
+      password: hashedPassword,
+      isAdmin: isAdminFlag,
+    });
     await user.save();
 
-    // Generate a JWT token for the user
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    // Generate a JWT token
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
-    // Set the token in the response cookie
+    // Set token in cookie
     res.cookie("token", token, {
-      httpOnly: true, // Prevent JavaScript access to the token
-      secure: process.env.NODE_ENV === "production", // Ensure the cookie is only sent over HTTPS in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // SameSite policy to prevent CSRF
-      maxAge: 3600000, // Set cookie expiration to 1 hour
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 3600000,
     });
 
-    // Sending a welcome email to the user
-    const mailOptions = {
-      from: '"Buddhimz Support" <' + process.env.SENDER_EMAIL + ">",
-      to: email,
-      subject: "Welcome to Buddhimz",
-      html: `
-                <html>
-                    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
-                        <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                            <!-- Header image with publicly hosted URL -->
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <img src="https://vrofile-poto.s3.us-east-1.amazonaws.com/photo_2025-01-22_22-19-57.jpg" alt="Buddhimz Logo" style="width: 200px; height: auto; border-radius: 4px;" />
-                            </div>
-                            <!-- Welcome message -->
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <p style="font-size: 16px; color: #333;">Welcome to <strong>Buddhimz</strong>! Your account has been created with Email ID: <strong>${email}</strong>.</p>
-                            </div>
-                            <!-- Thank you message -->
-                            <div style="text-align: center;">
-                                <p style="font-size: 14px; color: #555;">Thank you for joining us.</p>
-                                <p style="font-size: 14px; color: #555;">Best regards,<br>Team Buddhimz</p>
-                            </div>
-                        </div>
-                    </body>
-                </html>`,
-    };
+    // Return different messages based on user type
+    const message = user.isAdmin
+      ? "Admin registered successfully"
+      : "User registered successfully";
 
-    try {
-      // Attempt to send the email
-      await transporter.sendMail(mailOptions);
-    } catch (mailError) {
-      // Log the error and return a response if email fails to send
-      console.error("Error sending email:", mailError);
-      return res.status(500).json({
-        success: false,
-        message: "User registered, but email could not be sent",
-        error: mailError.message || mailError,
-      });
-    }
-
-    // Respond to the client indicating that the user has been successfully registered
-    res
-      .status(201)
-      .json({ success: true, message: "User registered successfully" });
+    res.status(201).json({ success: true, message });
   } catch (error) {
-    // Catch any server-side errors during the registration process
     console.error("Error in registration process:", error);
     res
       .status(500)
@@ -120,7 +93,6 @@ export const login = async (req, res) => {
     // Check if a user with the provided email exists in the database
     const user = await userModel.findOne({ email });
     if (!user) {
-      // If the email is not found, return an 'Invalid email' error
       return res.status(401).json({
         success: false,
         message: "Invalid email.",
@@ -130,33 +102,41 @@ export const login = async (req, res) => {
     // Compare the provided password with the hashed password in the database
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      // If the password does not match, return an 'Invalid password' error
       return res.status(401).json({
         success: false,
         message: "Invalid password.",
       });
     }
 
-    // Generate a JWT token for the user
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    // ✅ Generate token with isAdmin
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    // Set the token as a cookie in the response
+    // ✅ Set the token as a cookie in the response
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Secure cookies in production
+      secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 3600000, // Cookie expiry time: 1 hour
+      maxAge: 3600000, // 1 hour
     });
 
-    // Return a success response for a successful login
+    // ✅ Return full response with isAdmin and user info
     return res.status(200).json({
       success: true,
       message: "Login successful.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+      redirectTo: user.isAdmin ? '/admin' : '/' // Send the route to redirect
     });
+
   } catch (error) {
-    // Log the error and return a generic server error message
     console.error("Login error:", error);
     return res.status(500).json({
       success: false,
@@ -166,29 +146,18 @@ export const login = async (req, res) => {
 };
 
 // Logout the user
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
   try {
-    // Clear the token cookie securely
     res.clearCookie("token", {
-      httpOnly: true, // Protect against client-side JavaScript accessing the cookie
-      secure: process.env.NODE_ENV === "production", // Ensure the cookie is only sent over HTTPS in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // Cross-site request protection
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     });
 
-    // Send a response confirming logout
-    return res.status(200).json({
-      success: true,
-      message: "Logged out successfully.",
-    });
+    return res.status(200).json({ success: true, message: "Logged out successfully." });
   } catch (error) {
-    // Log the error for debugging purposes
     console.error("Logout error:", error);
-
-    // Return a server error response
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred during logout. Please try again.",
-    });
+    return res.status(500).json({ success: false, message: "Logout failed." });
   }
 };
 
@@ -493,3 +462,5 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
+
+

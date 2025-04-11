@@ -1,31 +1,58 @@
 import jwt from 'jsonwebtoken';
 
-// Middleware function to authenticate the user
+// Middleware to authenticate user
 const userAuth = async (req, res, next) => {
-    const { token } = req.cookies; // Extract token from cookies
+  const { token } = req.cookies;
 
-    // Check if token is not present
-    if (!token) {
-        return res.status(401).json({ success: false, message: 'Not authorized to access this website' });
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized to access this website',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded?.id) {
+      req.body.userId = decoded.id;
+      req.user = decoded; // Attach entire decoded user (includes isAdmin)
+      next();
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this website',
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Middleware to check if the user is an admin
+export const isAdminMiddleware = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Not authenticated' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Access denied: Admins only' });
     }
 
-    try {
-        // Verify the token using the secret key
-        const tokenDecode = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Check if the token contains a valid user ID
-        if (tokenDecode.id) {
-            req.body.userId = tokenDecode.id; // Attach the user ID to the request body
-        } else {
-            return res.status(401).json({ success: false, message: 'Not authorized to access this website' });
-        }
-
-        next(); // Proceed to the next middleware or route handler
-
-    } catch (error) {
-        // Handle any errors during token verification
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-}
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(400).json({ success: false, message: 'Invalid token' });
+  }
+};
 
 export default userAuth;
+
