@@ -40,3 +40,29 @@ export const getUserData = async (req, res) => {
     });
   }
 };
+
+
+// Get all users
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await userModel.find({}, 'name email isAccountVerified isAdmin');
+
+    // Map over users to convert isAdmin boolean to 'admin' or 'user'
+    const mappedUsers = users.map(user => ({
+      ...user.toObject(), // Convert Mongoose object to plain object
+      role: user.isAdmin ? 'admin' : 'user', // Add role field based on isAdmin value
+    }));
+
+    return res.json({
+      success: true,
+      users: mappedUsers,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: `Server error: ${error.message}`,
+    });
+  }
+};
+
+
