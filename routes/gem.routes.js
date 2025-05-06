@@ -1,26 +1,29 @@
 import express from 'express';
 import multer from 'multer';
-import Gem from '../models/gem.model.js';  // Assuming Gem model is defined
+import Gem from '../models/gem.model.js';
+
 const gemRouter = express.Router();
 
 // Set up Multer for handling file uploads (in-memory storage)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Define the addgem controller
+// Add Gem
 export const addgem = async (req, res) => {
   try {
-    const { name, price, carot, shortdes, des } = req.body;
+    const { name, price, carat, category, color, shortdes, des } = req.body;
     const image = req.file;
 
-    if (!name || !price || !carot || !shortdes || !des || !image) {
+    if (!name || !price || !carat || !category || !color || !shortdes || !des || !image) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
     const newGem = new Gem({
       name,
       price,
-      carot,
+      carat,
+      category,
+      color,
       shortdes,
       des,
       image: {
@@ -37,7 +40,7 @@ export const addgem = async (req, res) => {
   }
 };
 
-// Define the getAllGems controller
+// Get All Gems
 export const getAllGems = async (req, res) => {
   try {
     const gems = await Gem.find();
@@ -45,7 +48,7 @@ export const getAllGems = async (req, res) => {
     const gemsWithBase64Images = gems.map((gem) => {
       let imageData = null;
 
-      if (gem.image && gem.image.data) {
+      if (gem.image?.data) {
         imageData = {
           contentType: gem.image.contentType,
           data: gem.image.data.toString('base64'),
@@ -56,7 +59,9 @@ export const getAllGems = async (req, res) => {
         _id: gem._id,
         name: gem.name,
         price: gem.price,
-        carot: gem.carot,
+        carat: gem.carat,
+        category: gem.category,
+        color: gem.color,
         shortdes: gem.shortdes,
         des: gem.des,
         image: imageData,
@@ -70,7 +75,7 @@ export const getAllGems = async (req, res) => {
   }
 };
 
-// Define the getGemById controller
+// Get Gem by ID
 export const getGemById = async (req, res) => {
   try {
     const gem = await Gem.findById(req.params.id);
@@ -78,7 +83,7 @@ export const getGemById = async (req, res) => {
       return res.status(404).json({ message: 'Gem not found' });
     }
 
-    const imageData = gem.image && gem.image.data
+    const imageData = gem.image?.data
       ? {
           contentType: gem.image.contentType,
           data: gem.image.data.toString('base64'),
@@ -90,7 +95,9 @@ export const getGemById = async (req, res) => {
         _id: gem._id,
         name: gem.name,
         price: gem.price,
-        carot: gem.carot,
+        carat: gem.carat,
+        category: gem.category,
+        color: gem.color,
         shortdes: gem.shortdes,
         des: gem.des,
         image: imageData,
@@ -102,13 +109,13 @@ export const getGemById = async (req, res) => {
   }
 };
 
-// Define the updateGem controller (with file upload)
+// Update Gem
 export const updateGem = async (req, res) => {
   try {
-    const { name, price, carot, shortdes, des } = req.body;
+    const { name, price, carat, category, color, shortdes, des } = req.body;
     const image = req.file;
 
-    if (!name || !price || !carot || !shortdes || !des) {
+    if (!name || !price || !carat || !category || !color || !shortdes || !des) {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
@@ -119,7 +126,9 @@ export const updateGem = async (req, res) => {
 
     gem.name = name;
     gem.price = price;
-    gem.carot = carot;
+    gem.carat = carat;
+    gem.category = category;
+    gem.color = color;
     gem.shortdes = shortdes;
     gem.des = des;
 
@@ -132,7 +141,7 @@ export const updateGem = async (req, res) => {
 
     await gem.save();
 
-    const imageData = gem.image && gem.image.data
+    const imageData = gem.image?.data
       ? {
           contentType: gem.image.contentType,
           data: gem.image.data.toString('base64'),
@@ -145,7 +154,9 @@ export const updateGem = async (req, res) => {
         _id: gem._id,
         name: gem.name,
         price: gem.price,
-        carot: gem.carot,
+        carat: gem.carat,
+        category: gem.category,
+        color: gem.color,
         shortdes: gem.shortdes,
         des: gem.des,
         image: imageData,
@@ -157,7 +168,7 @@ export const updateGem = async (req, res) => {
   }
 };
 
-// Define the deleteGem controller
+// Delete Gem
 export const deleteGem = async (req, res) => {
   try {
     const gem = await Gem.findById(req.params.id);
@@ -165,7 +176,7 @@ export const deleteGem = async (req, res) => {
       return res.status(404).json({ message: 'Gem not found' });
     }
 
-    const imageData = gem.image && gem.image.data
+    const imageData = gem.image?.data
       ? {
           contentType: gem.image.contentType,
           data: gem.image.data.toString('base64'),
@@ -180,7 +191,9 @@ export const deleteGem = async (req, res) => {
         _id: gem._id,
         name: gem.name,
         price: gem.price,
-        carot: gem.carot,
+        carat: gem.carat,
+        category: gem.category,
+        color: gem.color,
         shortdes: gem.shortdes,
         des: gem.des,
         image: imageData,
@@ -192,7 +205,7 @@ export const deleteGem = async (req, res) => {
   }
 };
 
-// Use the controllers in your router
+// Routes
 gemRouter.post('/', upload.single('image'), addgem);
 gemRouter.get('/', getAllGems);
 gemRouter.get('/:id', getGemById);

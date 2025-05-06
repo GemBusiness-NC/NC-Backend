@@ -133,6 +133,8 @@ export const login = async (req, res) => {
         email: user.email,
         isAdmin: user.isAdmin,
       },
+      token,
+      // ✅ Redirect based on user type
       redirectTo: user.isAdmin ? '/admin' : '/' // Send the route to redirect
     });
 
