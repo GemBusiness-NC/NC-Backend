@@ -6,6 +6,7 @@ import connectDB from './config/db.js';
 import authRouter from './routes/authRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import gemRouter from './routes/gem.routes.js';
+import orderRouter from './routes/orderRoutes.js'; 
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -26,6 +27,7 @@ app.get('/', (req, res) => res.send('API is running'));
 // Auth routes
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
+app.use('/api/orders', orderRouter);
 
 // Gem routes with image upload (ensure multer is applied only here)
 app.use('/api/gems', gemRouter); // No need to change this

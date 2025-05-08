@@ -1,4 +1,4 @@
-import userModel from "../models/userModel.js"; // Import the user model
+import userModel from "../models/userModel.js"; 
 
 export const getUserData = async (req, res) => {
   try {
@@ -40,7 +40,6 @@ export const getUserData = async (req, res) => {
     });
   }
 };
-
 
 // Get all users
 export const getAllUsers = async (req, res) => {
