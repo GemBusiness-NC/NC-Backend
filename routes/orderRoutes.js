@@ -6,7 +6,7 @@ import {
   updateOrderStatus,
   getCustomerOrders
 } from '../controllers/orderController.js';
-import { userAuth } from '../middleware/userAuth.js';
+import userAuth from '../middleware/userAuth.js'; 
 
 const router = express.Router();
 
