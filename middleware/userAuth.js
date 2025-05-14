@@ -2,12 +2,21 @@ import jwt from 'jsonwebtoken';
 
 // Middleware to authenticate user
 const userAuth = async (req, res, next) => {
-  const { token } = req.cookies;
+  // Check for token in cookies
+  const cookieToken = req.cookies?.token;
+  
+  // Check for token in Authorization header
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') 
+    ? authHeader.substring(7) // Remove 'Bearer ' prefix
+    : null;
+    
+  // Use either cookie token or bearer token
+  const token = cookieToken || bearerToken;
 
   if (!token) {
     return res.status(401).json({
-      success: false,
-      message: 'Not authorized to access this website',
+      message: 'Unauthorized', // Simplified error message
     });
   }
 
@@ -16,18 +25,17 @@ const userAuth = async (req, res, next) => {
 
     if (decoded?.id) {
       req.body.userId = decoded.id;
-      req.user = decoded; // Attach entire decoded user (includes isAdmin)
+      req.user = decoded; // Attach entire decoded user (includes id, email, isAdmin)
       next();
     } else {
       return res.status(401).json({
-        success: false,
-        message: 'Not authorized to access this website',
+        message: 'Unauthorized',
       });
     }
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
+    console.error('Auth error:', error);
+    return res.status(401).json({
+      message: 'Unauthorized',
     });
   }
 };

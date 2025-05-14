@@ -108,9 +108,13 @@ export const login = async (req, res) => {
       });
     }
 
-    // ✅ Generate token with isAdmin
+    // ✅ Generate token with id, email, and isAdmin
     const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
+      { 
+        id: user._id, 
+        email: user.email,  // Add email to token
+        isAdmin: user.isAdmin 
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
