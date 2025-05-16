@@ -7,84 +7,33 @@ const orderSchema = new mongoose.Schema({
     ref: 'user',  // Reference to your user model
     required: false, // Not required for backward compatibility with existing orders
   },
-  customerName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  customerEmail: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true
-  },
+  customerName: { type: String, required: true, trim: true },
+  customerEmail: { type: String, required: true, trim: true, lowercase: true },
   shippingAddress: {
-    street: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    city: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    state: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    zipCode: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    country: {
-      type: String,
-      required: true,
-      trim: true,
-      default: 'USA'
-    }
+    street: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zipCode: { type: String, required: true, trim: true },
+    country: { type: String, required: true, trim: true, default: 'USA' }
   },
-  paymentMethod: {
-    type: String,
-    required: true,
+  paymentMethod: {type: String,required: true,
     enum: ['credit_card', 'paypal', 'bank_transfer'],
     default: 'credit_card'
   },
   items: [{
-    productId: {
-      type: String,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1
-    }
+    productId: {type: String,required: true},
+    name: {type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 1 }
   }],
-  orderTotal: {
-    type: Number,
-    required: true,
-    min: 0
-  },
+  orderTotal: { type: Number, required: true, min: 0 },
   tax: {
     type: Number,
     default: function() {
       return this.orderTotal * 0.08; // 8% tax
     }
   },
-  shippingCost: {
-    type: Number,
+  shippingCost: { type: Number,
     default: 15.00
   },
   totalWithTaxAndShipping: {

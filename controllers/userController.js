@@ -1,5 +1,6 @@
 import userModel from "../models/userModel.js"; 
 
+// Get user data by ID
 export const getUserData = async (req, res) => {
   try {
     const { userId } = req.body; // Extract the userId from the request body

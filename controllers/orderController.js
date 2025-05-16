@@ -1,10 +1,5 @@
 import Order from '../models/Order.js';
 
-/**
- * Create a new order
- * @route POST /api/orders
- * @access Public
- */
 export const createOrder = async (req, res) => {
   try {
     // Extract userId from authenticated request
@@ -58,6 +53,7 @@ export const createOrder = async (req, res) => {
   }
 };
 
+
 export const getOrders = async (req, res) => {
   try {
     const userId = req.user?.id || req.userId;
@@ -102,11 +98,6 @@ export const getOrders = async (req, res) => {
 };
 
 
-/**
- * Get all orders
- * @route GET /api/orders
- * @access Admin only
- */
 export const getAllOrders = async (req, res) => {
     try {
         // Check if user is admin (assuming middleware sets this)
@@ -149,11 +140,7 @@ export const getAllOrders = async (req, res) => {
     }
 };
 
-/**
- * Get order by ID
- * @route GET /api/orders/:id
- * @access User or Admin
- */
+
 export const getOrderById = async (req, res) => {
     try {
         // Validate that the ID is a valid MongoDB ObjectId
@@ -186,11 +173,7 @@ export const getOrderById = async (req, res) => {
     }
 };
 
-/**
- * Update order status
- * @route PATCH /api/orders/:id/status
- * @access Admin only
- */
+
 export const updateOrderStatus = async (req, res) => {
     try {
         // Check if user is admin
@@ -239,16 +222,7 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
-/**
- * Get orders for logged-in customer
- * @route GET /api/orders/customer
- * @access Private
- */
-/**
- * Get orders for logged-in customer
- * @route GET /api/orders/customer
- * @access Private
- */
+
 export const getCustomerOrders = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -329,11 +303,7 @@ export const getCustomerOrders = async (req, res) => {
     }
 };
 
-/**
- * Delete order (Admin only)
- * @route DELETE /api/orders/:id
- * @access Admin only
- */
+
 export const deleteOrder = async (req, res) => {
     try {
         // Check if user is admin
